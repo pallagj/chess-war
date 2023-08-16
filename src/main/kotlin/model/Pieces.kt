@@ -126,8 +126,6 @@ class King(
                 val dist = abs(rPos - kPos)
                 val kToR = (rPos - kPos) / dist
 
-                //TODO: attacked at pawn hit position not detected
-
                 if (attackedAtPosition(Pos(kPos + 1 * kToR, this.position.y))) return@forEach
                 if (attackedAtPosition(Pos(kPos + 2 * kToR, this.position.y))) return@forEach
 
