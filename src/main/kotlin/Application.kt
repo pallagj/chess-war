@@ -15,7 +15,7 @@ class Application : javax.swing.JPanel() {
     private val historyGraphics = HistoryGraphics(Pos(525, 85), Pos(775, 500))
 
     init {
-        Animation.registerCallback { repaint() }
+        Animation.registerCallback { repaint(); }
         /*val timer = javax.swing.Timer(1000 / 60) {
             repaint()
         }

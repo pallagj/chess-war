@@ -18,14 +18,13 @@ class BoardGraphics(private var start: Pos, private var end: Pos, val drawCoordi
     private val cell = (end - start) / 8
 
     private var pieces = mutableMapOf<Piece, ImageIcon>()
-    private var animationOn = false
-    private var animationTime = 0f
+    private val moveAnimation = Animation(duration=0.3f, interpolationType = InterpolationType.EASE_IN_OUT)
+    private val changeAnimation = Animation(duration=0.1f, interpolationType = InterpolationType.EASE_IN_OUT)
     private var lastHistoryIndex = -1
 
     private var inChange = ChangeState.NO_CHANGE
     private var selectedTarget = Pos(0, 0)
 
-    private var zoomOnChange = 12f
     private var hoverMouse = Pos(0, 0)
 
     init {
@@ -57,19 +56,13 @@ class BoardGraphics(private var start: Pos, private var end: Pos, val drawCoordi
         return null
     }
 
-    //function catmull rom spline 0 to 1 and slow grow and slow down
-    private fun catmullRomSpline(t: Float): Float {
-        return -2f * t * t * t + 3f * t * t
-    }
-
     fun draw(g: Graphics2D) {
         val board = Board.board
-        val lastHistory = board.history.getLastHistory()
         if (lastHistoryIndex != board.history.historyIndex) {
-            animationOn = true
-            animationTime = 0f
+            moveAnimation.reset()
             lastHistoryIndex = Board.board.history.historyIndex
             inChange = ChangeState.NO_CHANGE
+            selectedPos = null
         }
 
         g.color = Color(240, 217, 181)
@@ -197,15 +190,21 @@ class BoardGraphics(private var start: Pos, private var end: Pos, val drawCoordi
             from = Pos(from.x - 1, 8 - from.y)
             to = Pos(to.x - 1, 8 - to.y)
 
-            val t = if (animationOn) animationTime else 1f
-            val w = catmullRomSpline(t)
+            val w = moveAnimation.eval()
 
-            val x = (from.x * (1f - w) + to.x * w) * cell.x + start.x
-            val y = (from.y * (1f - w) + to.y * w) * cell.y + start.y
+            var x = (from.x * (1.0 - w) + to.x * w) * cell.x + start.x
+            var y = (from.y * (1.0 - w) + to.y * w) * cell.y + start.y
 
-            if (posChange.first == null) g.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, w)
+            if(from == to) {
+                x = ((from.x) * cell.x + start.x).toDouble()
+                y = ((from.y) * cell.y + start.y).toDouble()
+            }
 
-            if (posChange.second == null) g.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f - w)
+            if (posChange.first == null) g.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, w.toFloat())
+
+            if (posChange.second == null) g.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
+                (1f - w).toFloat()
+            )
 
 
             g.drawImage(getIcon(piece.color, piece.type)!!.image, x.toInt(), y.toInt(), cell.x, cell.y, null)
@@ -214,16 +213,12 @@ class BoardGraphics(private var start: Pos, private var end: Pos, val drawCoordi
 
         //Draw pawn change
         if (inChange != ChangeState.NO_CHANGE) {
-            g.color = Color(0, 0, 0, 100)
+            g.color = Color(0, 0, 0, 150)
             g.fillRect(start.x, start.y, cell.x * 8, cell.y * 8)
         }
 
-        if (animationOn) animationTime += 0.1f
 
-        if (animationTime > 1.0f) {
-            animationOn = false
-            animationTime = 0f
-
+        if (moveAnimation.eval() == 1.0) {
             if (inChange == ChangeState.BEFORE_CHANGE) {
                 inChange = ChangeState.AT_CHANGE
             }
@@ -242,8 +237,10 @@ class BoardGraphics(private var start: Pos, private var end: Pos, val drawCoordi
                 val img = getIcon(color, pieceType)!!.image
                 val (x, y) = chessToBoard(selectedTarget)
 
-                val zoom = if (selectedTarget.y - index * color.getDirection() == selectedChange) zoomOnChange else 12f
-                val w = (12 - zoom) / 7f
+                var w = changeAnimation.eval().toFloat()
+                if (selectedTarget.y - index * color.getDirection() != selectedChange)
+                    w = 0f
+
                 val background = Color(
                     (135*(1-w) + 207*w).toInt(),
                     (135*(1-w) + 98*w).toInt(),
@@ -254,11 +251,11 @@ class BoardGraphics(private var start: Pos, private var end: Pos, val drawCoordi
                     Point(x + cell.x / 2, y + index * color.getDirection() * cell.x + cell.x / 2),
                     cell.x.toFloat() * (1 + (sqrt(2f) - 1f) * w),
                     floatArrayOf(0f, 0.5f, 0.51f),
-                    arrayOf(Color.WHITE, background, Color(0, 0, 0, 0))
+                    arrayOf(Color.WHITE, background, Color(background.blue, background.green, background.blue, 0))
                 )
                 g.fillRect(x, y + index * color.getDirection() * cell.x, cell.x, cell.y)
 
-
+                val zoom = ((1-w)*7+5)
                 val bufferedImage = BufferedImage(cell.x, cell.y, BufferedImage.TYPE_INT_ARGB)
                 bufferedImage.graphics.drawImage(img, 0, 0, null)
                 val scaledImg = bufferedImage.getScaledInstance(
@@ -298,7 +295,7 @@ class BoardGraphics(private var start: Pos, private var end: Pos, val drawCoordi
                 board.step("${selectedPos!!}$selectedTarget${selected}")
                 inChange = ChangeState.NO_CHANGE
                 lastHistoryIndex = board.history.historyIndex
-                animationOn = false
+
                 selectedPos = null
                 return
             }
@@ -317,7 +314,7 @@ class BoardGraphics(private var start: Pos, private var end: Pos, val drawCoordi
                 inChange = ChangeState.NO_CHANGE
             } catch (_: PawnChangeNotSpecifiedException) {
                 inChange = ChangeState.BEFORE_CHANGE
-                animationOn = true
+                moveAnimation.reset()
                 selectedTarget = Pos(x, y)
             } catch (_: Exception) {
                 selectedPos = null
@@ -333,14 +330,12 @@ class BoardGraphics(private var start: Pos, private var end: Pos, val drawCoordi
             val (x, y) = boardToChess(pos)
 
             if (x == selectedTarget.x && Math.abs(selectedTarget.y - y) <= 4) {
-                if (y == selectedChange) {
-                    zoomOnChange = max(zoomOnChange - 0.5f, 5f)
-                } else {
+                if (y != selectedChange) {
                     selectedChange = y
-                    zoomOnChange = 12f
+                    changeAnimation.reset()
                 }
             } else {
-                zoomOnChange = 12f
+                selectedChange = 0
             }
         }
     }

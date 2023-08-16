@@ -8,20 +8,16 @@ enum class InterpolationType {
     LINEAR, EASE_IN, EASE_OUT, EASE_IN_OUT
 }
 class Animation (
-    var startTime :Long = time,
-    var duration: Long = 1000,
+    private var startTime :Long = time,
+    var duration: Float = 0.5f,
     var interpolationType: InterpolationType = InterpolationType.LINEAR
 ){
     fun reset() {
         startTime = time
     }
 
-    fun jumpTo(delta: Double) {
-        startTime = time - (duration * delta).toLong()
-    }
-
     fun eval() : Double {
-        var t = (time - startTime).toDouble() / duration
+        var t = (time - startTime).toDouble() / (duration*1_000_000_000.0)
         t = max(0.0, min(1.0, t))
 
         return when(interpolationType) {
