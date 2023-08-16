@@ -6,5 +6,16 @@ enum class PieceType {
     ROOK,
     BISHOP,
     KNIGHT,
-    KING
+    KING;
+
+    fun getStringIcon() : String {
+        return when(this) {
+            PAWN -> ""
+            QUEEN -> "♕"
+            ROOK -> "♖"
+            BISHOP -> "♗"
+            KNIGHT -> "♘"
+            KING -> "♔"
+        }
+    }
 }

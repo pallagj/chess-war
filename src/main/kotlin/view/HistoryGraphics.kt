@@ -59,11 +59,10 @@ class HistoryGraphics(private var start: Pos, private var end: Pos) {
         for (i in 0 until rows) {
             val cellWiths =
                 listOf(numberCellWidth, (img.width - numberCellWidth) / 2, (img.width - numberCellWidth) / 2)
-            //loop x from 0 to img.width and always add cellWiths[i] to x
             var x = 0
             cellWiths.forEachIndexed { index, cellWith ->
                 g.color = if (index == 0) backgroundColor else darkBackground
-                if (i * 2 + index - 1 == historyIndex) g.color = selectedColor
+                if (index != 0 && i * 2 + index - 1 == historyIndex) g.color = selectedColor
                 if (index != 0 && mouse.x in start.x + x until start.x + x + cellWith && mouse.y + scrollPos in start.y + i * cellHeight until start.y + (i + 1) * cellHeight) {
                     g.color = hoverColor
                 }
@@ -76,8 +75,9 @@ class HistoryGraphics(private var start: Pos, private var end: Pos) {
                     text = if (i * 2 + index - 1 < history.size) history[i * 2 + index - 1] else ""
                 }
 
-
                 g.color = Color.white
+                g.font = g.font.deriveFont(17f)
+
                 g.drawString(text, x + 6, i * cellHeight + 20)
 
                 x += cellWith

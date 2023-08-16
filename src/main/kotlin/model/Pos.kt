@@ -32,6 +32,10 @@ data class Pos (
         result = 31 * result + y
         return result
     }
+
+    fun getChessNotation(): String {
+        return "${'a' + this.x - 1}${this.y}"
+    }
     override fun toString(): String {
         return "${this.x}${this.y}"
     }

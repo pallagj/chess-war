@@ -1,5 +1,7 @@
 package model
 
+import kotlin.math.abs
+
 data class StepHistory(
     var piece: Piece, var from: Pos, var to: Pos, var hit: Piece?,  var additionalStep: StepHistory? = null, var change:Pair<Piece,Piece>? = null
 )
@@ -49,11 +51,6 @@ class BoardHistory(
 
         this.historyIndexBefore = this.historyIndex
         this.historyIndex--
-
-        /*if(dropFuture) {
-            this.stepHistory = this.stepHistory.subList(0, this.historyIndex + 1)
-            this.historyIndexBefore = this.historyIndex
-        }*/
     }
 
     fun redo() {
@@ -155,8 +152,21 @@ class BoardHistory(
         var i = 0
         while (i < stepHistory.size) {
             val step = stepHistory[i]
-            val change = if (step.change == null) "" else "${step.change!!.second.type.ordinal}"
-            history.add("${step.from.x}${step.from.y}${step.to.x}${step.to.y}" + change)
+            //val change = if (step.change == null) "" else "${step.change!!.second.type.ordinal}"
+            //history.add("${step.from.x}${step.from.y}${step.to.x}${step.to.y}" + change)
+
+            if(step.additionalStep != null){
+                if(abs(step.additionalStep!!.from.x - step.additionalStep!!.to.x) == 2) {
+                    history.add("O-O")
+                } else {
+                    history.add("O-O-O")
+                }
+            } else {
+                val hit = if (step.hit == null) "" else (if (step.piece.type == PieceType.PAWN) "${step.from.getChessNotation()[0]}" else "") + "x"
+                val change = if (step.change == null) "" else "=${step.change!!.second.type.getStringIcon()}"
+                history.add("${step.piece.type.getStringIcon()}${hit}${step.to.getChessNotation()}${change}")
+            }
+
             i++
         }
         return Pair(history, historyIndex)
