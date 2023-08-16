@@ -1,5 +1,5 @@
 # chess-war
-![example.png](example.png)
+![example.png](example.gif)
 
 ### Starting the Game
 The game starts with the white player. The white player can move any white piece. The black player can move any black piece. The game ends when one player is in checkmate.
