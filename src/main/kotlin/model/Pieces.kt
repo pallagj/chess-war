@@ -126,12 +126,12 @@ class King(
                 val dist = abs(rPos - kPos)
                 val kToR = (rPos - kPos) / dist
 
-                if (attackedAtPosition(Pos(kPos + 1 * kToR, this.position.y))) return@forEach
-                if (attackedAtPosition(Pos(kPos + 2 * kToR, this.position.y))) return@forEach
-
                 for (i in 1 until dist) {
                     if (board.isPieceAt(Pos(kPos + i * kToR, this.position.y))) return@forEach
                 }
+
+                if (attackedAtPosition(Pos(kPos + 1 * kToR, this.position.y))) return@forEach
+                if (attackedAtPosition(Pos(kPos + 2 * kToR, this.position.y))) return@forEach
 
                 specialMoves += Pos(kPos + kToR * 2, this.position.y)
             }
