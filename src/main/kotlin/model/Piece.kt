@@ -1,13 +1,12 @@
 package model
 
 class MoveRule(
-    var steps: Array<Pos>,
-    var maxRepeat: Int = 1
+    var steps: Array<Pos>, var maxRepeat: Int = 1
 )
 
 
 abstract class Piece(
-    var letter: String, var color: PieceColor, var type: PieceType, var position: Pos, val initPosition : Pos = position,
+    var letter: String, var color: PieceColor, var type: PieceType, var position: Pos, val initPosition: Pos = position,
 
     var move: MoveRule, var initMove: MoveRule = move, var hit: MoveRule = move, var canKnockOut: Boolean = true,
 
@@ -37,9 +36,8 @@ abstract class Piece(
         if (!knockOutFilter) // TODO : not knocking is wrong
             return moves
 
-        return moves.filter { move -> board.pieces
-            .filter { it.color == this.color && !it.canKnockOut }
-            .all {
+        return moves.filter { move ->
+            board.pieces.filter { it.color == this.color && !it.canKnockOut }.all {
                 val history = board.history.clone()
                 hardStep(move, false)
                 val output = !it.attackedAtPosition()
@@ -49,7 +47,6 @@ abstract class Piece(
             }
         }.toSet()
     }
-
 
 
     private fun possibleMoves(knockOutFilter: Boolean = true): Set<Pos> {
@@ -76,7 +73,7 @@ abstract class Piece(
         val from = Pos(command.substring(0, 2))
         val to = Pos(command.substring(2, 4))
 
-        if(from != position) return
+        if (from != position) return
 
         if (this.getPossibleMoves().contains(to)) {
             hardStep(to)
@@ -92,7 +89,21 @@ abstract class Piece(
     }
 
     fun attackedAtPosition(position: Pos = this.position): Boolean {
-        return board.pieces.filter { it.color != this.color }.any { it.possibleMoves(false).contains(position) }
+        if (position != this.position) {
+            val history = board.history.clone()
+            hardStep(position)
+
+            val output = attackedAtPosition()
+
+            board.history.undo()
+            board.history = history
+
+            return output
+        }
+
+        return board.pieces
+            .filter { it.color != this.color }
+            .any { it.possibleMoves(false).contains(position) }
     }
 
 }
