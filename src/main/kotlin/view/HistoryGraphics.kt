@@ -75,7 +75,7 @@ class HistoryGraphics(private var start: Pos, private var end: Pos) {
         graphics.drawImage(subImage, start.x, start.y, null)
 
         graphics.color = cellColor
-        graphics.drawRect(start.x, start.y, end.x - start.x, img.height)
+        graphics.drawRect(start.x, start.y, end.x - start.x, subImage.height)
     }
 
     fun moseClick(pos: Pos) {

@@ -22,7 +22,7 @@ class InfoGraphics(private var start: Pos, private var end: Pos) {
         if(board.finished()) {
             text = board.getResult()
         }
-        //draw center text (use font metrics to center) between start and end
+
         val fm = g.fontMetrics
         val x = (start.x + end.x - fm.stringWidth(text)) / 2
         val y = start.y + 40

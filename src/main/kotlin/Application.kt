@@ -22,14 +22,12 @@ class Application : javax.swing.JPanel() {
         super.paintComponent(graphics)
         if(graphics == null) return
 
-        //g convert to Graphics2D
         val panelImage = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
         val g: Graphics2D = panelImage.createGraphics()
 
         g.setRenderingHint(
             java.awt.RenderingHints.KEY_ANTIALIASING,
             java.awt.RenderingHints.VALUE_ANTIALIAS_ON)
-
 
         g.color = Color(22, 21, 18)
         g.fillRect(0, 0, width, height)

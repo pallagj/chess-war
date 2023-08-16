@@ -66,8 +66,7 @@ class Board {
     }
 
     fun finished(): Boolean {
-        return pieces.filter { it.color == PieceColor.WHITE }.sumOf { it.getPossibleMoves().size } == 0
-                || pieces.filter { it.color == PieceColor.BLACK }.sumOf { it.getPossibleMoves().size } == 0
+        return pieces.filter { it.color == history.nextPlayer() }.sumOf { it.getPossibleMoves().size } == 0
     }
 
     fun step(command: String) {
