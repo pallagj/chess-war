@@ -23,7 +23,7 @@ class BoardHistory(
         this.historyIndex++
     }
 
-    fun undo(dropFuture: Boolean = false) {
+    fun undo() {
         if (historyIndex < 0) {
             throw Exception("No history to undo")
         }
@@ -148,12 +148,6 @@ class BoardHistory(
         if (stepHistory.subList(0, historyIndex + 1).isEmpty()) return null
 
         return stepHistory[historyIndex]
-    }
-
-    fun getLastHistoryBefore(): StepHistory? {
-        if (stepHistory.subList(0, historyIndexBefore + 1).isEmpty()) return null
-
-        return stepHistory[historyIndexBefore]
     }
 
     fun getHistory(): Pair<List<String>, Int> {

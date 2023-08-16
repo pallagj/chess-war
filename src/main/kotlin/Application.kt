@@ -16,10 +16,6 @@ class Application : javax.swing.JPanel() {
 
     init {
         Animation.registerCallback { repaint(); }
-        /*val timer = javax.swing.Timer(1000 / 60) {
-            repaint()
-        }
-        timer.start()*/
     }
 
     override fun paintComponent(graphics: Graphics?) {

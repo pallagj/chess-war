@@ -74,34 +74,6 @@ class Board {
         pieces.filter { it.color == history.nextPlayer() }.forEach { it.step(command) }
     }
 
-    fun printStatistics() {
-        if(finished()) {
-            if(pieces.filter{it.type == PieceType.KING} .all {!it.attackedAtPosition() })
-                println("Draw!")
-            else if(pieces.filter { it.color == PieceColor.WHITE }.sumOf { it.getPossibleMoves().size } == 0)
-                println("Black wins!")
-            else if(pieces.filter { it.color == PieceColor.BLACK }.sumOf { it.getPossibleMoves().size } == 0)
-                println("White wins!")
-        }
-
-
-        val whitePieces = pieces.filter { it.color == PieceColor.WHITE }
-        val blackPieces = pieces.filter { it.color == PieceColor.BLACK }
-
-        println("White: ${whitePieces.size} pieces")
-        println("Black: ${blackPieces.size} pieces")
-
-
-        if(!finished()) {
-            val turnColor = history.nextPlayer()
-            println("Turn: ${turnColor.name.lowercase(Locale.getDefault())}")
-            //List of all possible move posititons:
-            val possibleMoves = pieces.filter { it.color == turnColor }.map { piece -> piece.getPossibleMoves().map {"${piece.position.x}${piece.position.y}->${it.x}${it.y}"} }.flatten()
-            println("Possible moves: ${possibleMoves.sorted()}")
-
-        }
-    }
-
     fun isInBoard(move: Pos): Boolean {
         return move.x in 1..8 && move.y in 1..8
     }

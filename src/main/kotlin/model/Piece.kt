@@ -9,11 +9,11 @@ class MoveRule(
 abstract class Piece(
     var letter: String, var color: PieceColor, var type: PieceType, var position: Pos, val initPosition : Pos = position,
 
-    var move: MoveRule, var initMove: MoveRule = move, var hit: MoveRule = move, var knockable: Boolean = true,
+    var move: MoveRule, var initMove: MoveRule = move, var hit: MoveRule = move, var canKnockOut: Boolean = true,
 
     var board: Board
 ) {
-    private fun getMovesFromRule(rule: MoveRule, knock: Boolean, knockableFilter: Boolean = true): Set<Pos> {
+    private fun getMovesFromRule(rule: MoveRule, knock: Boolean, knockOutFilter: Boolean = true): Set<Pos> {
         val moves = mutableSetOf<Pos>()
 
         val steps = rule.steps
@@ -34,11 +34,11 @@ abstract class Piece(
             }
         }
 
-        if (!knockableFilter) // TODO : not knocking is wrong
+        if (!knockOutFilter) // TODO : not knocking is wrong
             return moves
 
         return moves.filter { move -> board.pieces
-            .filter { it.color == this.color && !it.knockable }
+            .filter { it.color == this.color && !it.canKnockOut }
             .all {
                 val history = board.history.clone()
                 hardStep(move, false)
@@ -52,11 +52,11 @@ abstract class Piece(
 
 
 
-    private fun possibleMoves(knockableFilter: Boolean = true): Set<Pos> {
+    private fun possibleMoves(knockOutFilter: Boolean = true): Set<Pos> {
         return setOf(
-            if (!this.isMoved()) getMovesFromRule(this.initMove, false, knockableFilter)
-            else getMovesFromRule(this.move, false, knockableFilter),
-            getMovesFromRule(this.hit, true, knockableFilter),
+            if (!this.isMoved()) getMovesFromRule(this.initMove, false, knockOutFilter)
+            else getMovesFromRule(this.move, false, knockOutFilter),
+            getMovesFromRule(this.hit, true, knockOutFilter),
         ).flatten().toSet()
     }
 
@@ -76,7 +76,7 @@ abstract class Piece(
         val from = Pos(command.substring(0, 2))
         val to = Pos(command.substring(2, 4))
 
-        if(from != position) return;
+        if(from != position) return
 
         if (this.getPossibleMoves().contains(to)) {
             hardStep(to)
@@ -86,7 +86,7 @@ abstract class Piece(
     }
 
     fun hardStep(to: Pos, additionalStep: Boolean = false) {
-        var hit = board.knockOut(to, this)
+        val hit = board.knockOut(to, this)
         board.history.add(this, position, to, hit, additionalStep)
         position = to
     }

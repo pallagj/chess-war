@@ -5,7 +5,6 @@ import java.awt.*
 import java.awt.image.BufferedImage
 import javax.swing.ImageIcon
 import kotlin.math.abs
-import kotlin.math.max
 import kotlin.math.sqrt
 
 
@@ -13,7 +12,7 @@ enum class ChangeState {
     NO_CHANGE, BEFORE_CHANGE, AT_CHANGE
 }
 
-class BoardGraphics(private var start: Pos, private var end: Pos, val drawCoordinates: Boolean = false) {
+class BoardGraphics(private var start: Pos, private var end: Pos, private val drawCoordinates: Boolean = false) {
     private var selectedPos: Pos? = null
     private val cell = (end - start) / 8
 
@@ -25,6 +24,7 @@ class BoardGraphics(private var start: Pos, private var end: Pos, val drawCoordi
     private var inChange = ChangeState.NO_CHANGE
     private var selectedTarget = Pos(0, 0)
 
+    private var selectedChange = 0
     private var hoverMouse = Pos(0, 0)
 
     init {
@@ -38,15 +38,18 @@ class BoardGraphics(private var start: Pos, private var end: Pos, val drawCoordi
         }
     }
 
-    fun chessToBoard(pos: Pos): Pos {
+    private fun chessToBoard(pos: Pos): Pos {
         return Pos((pos.x - 1) * cell.x, (8 - pos.y) * cell.y) + start
     }
 
-    fun boardToChess(pos: Pos): Pos {
-        return Pos((pos.x - start.x) / cell.x + 1, 8 - (pos.y - start.y) / cell.y)
+    private fun boardToChess(pos: Pos): Pos {
+        return Pos(
+            (pos.x - start.x) / cell.x + 1,
+            8 - (pos.y - start.y) / cell.y
+        )
     }
 
-    fun getIcon(color: PieceColor, type: PieceType): ImageIcon? {
+    private fun getIcon(color: PieceColor, type: PieceType): ImageIcon? {
         pieces.forEach { (piece, icon) ->
             if (piece.color == color && piece.type == type) {
                 return icon
@@ -77,9 +80,8 @@ class BoardGraphics(private var start: Pos, private var end: Pos, val drawCoordi
                 }
 
                 val piece = board.at(Pos(i + 1, 8 - j))
-                if (piece != null && !piece.knockable && piece.attackedAtPosition()) {
+                if (piece != null && !piece.canKnockOut && piece.attackedAtPosition()) {
                     g.color = Color(139, 0, 0)
-                    //gradient with center g.color and outside transperent:
                     g.paint = RadialGradientPaint(
                         Point(i * cell.x + start.x + cell.x / 2, j * cell.y + start.y + cell.y / 2),
                         cell.x / 1.5f,
@@ -95,7 +97,7 @@ class BoardGraphics(private var start: Pos, private var end: Pos, val drawCoordi
         g.drawRect(start.x, start.y, cell.x * 8, cell.y * 8)
 
         //draw last historyMove
-        var lastStepHistory = board.history.getLastHistory()
+        val lastStepHistory = board.history.getLastHistory()
         if (lastStepHistory != null) {
             listOf(lastStepHistory.from, lastStepHistory.to).forEach { p ->
                 g.color = if ((p.x + p.y) % 2 == 0) Color(170, 162, 58)
@@ -175,7 +177,7 @@ class BoardGraphics(private var start: Pos, private var end: Pos, val drawCoordi
         if (inChange != ChangeState.NO_CHANGE) {
             //in changes all value pair second is the first
             changes.replaceAll { _, v -> Pair(v.second, v.second) }
-            changes = changes.filter { (k, v) -> k.position != selectedTarget }.toMutableMap()
+            changes = changes.filter { (k, _) -> k.position != selectedTarget }.toMutableMap()
             changes[board.at(selectedPos!!)!!] = Pair(selectedPos, selectedTarget)
         }
 
@@ -226,14 +228,14 @@ class BoardGraphics(private var start: Pos, private var end: Pos, val drawCoordi
 
         if (inChange == ChangeState.AT_CHANGE) {
             val color = board.history.nextPlayer()
-            val forChagne = listOf(
+            val forChange = listOf(
                 PieceType.QUEEN,
                 PieceType.ROOK,
                 PieceType.BISHOP,
                 PieceType.KNIGHT,
             )
 
-            forChagne.forEachIndexed { index, pieceType ->
+            forChange.forEachIndexed { index, pieceType ->
                 val img = getIcon(color, pieceType)!!.image
                 val (x, y) = chessToBoard(selectedTarget)
 
@@ -280,16 +282,11 @@ class BoardGraphics(private var start: Pos, private var end: Pos, val drawCoordi
 
     fun click(pos: Pos) {
         val board = Board.board
-
-        val cell = (end - start) / 8
-
-        val x = (pos.x - start.x) / cell.x + 1
-        val y = 8 - (pos.y - start.y) / cell.y
+        val (x, y) = boardToChess(pos)
 
         if (inChange == ChangeState.AT_CHANGE) {
-            val (x, y) = boardToChess(pos)
 
-            val selected = Math.abs(selectedTarget.y - y) + 1
+            val selected = abs(selectedTarget.y - y) + 1
 
             if (selected in 1..4 && x == selectedTarget.x) {
                 board.step("${selectedPos!!}$selectedTarget${selected}")
@@ -322,14 +319,13 @@ class BoardGraphics(private var start: Pos, private var end: Pos, val drawCoordi
         }
     }
 
-    var selectedChange = 0
     fun mouseMoved(pos: Pos) {
         hoverMouse = boardToChess(pos)
 
         if (inChange == ChangeState.AT_CHANGE) {
             val (x, y) = boardToChess(pos)
 
-            if (x == selectedTarget.x && Math.abs(selectedTarget.y - y) <= 4) {
+            if (x == selectedTarget.x && abs(selectedTarget.y - y) <= 4) {
                 if (y != selectedChange) {
                     selectedChange = y
                     changeAnimation.reset()

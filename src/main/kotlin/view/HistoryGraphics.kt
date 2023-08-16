@@ -4,25 +4,25 @@ import model.Board
 import model.Pos
 import java.awt.Color
 import java.awt.Graphics2D
-import java.awt.MouseInfo
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import kotlin.math.max
 import kotlin.math.min
 
 
-class HistoryGraphics(var start: Pos, var end: Pos) {
-    var scrollPos: Int = 0
-    val cellHeight = 25
-    val numberCellWidth = 30
-    val cellWidth = (end.x - start.x + 1 - numberCellWidth) / 2
+class HistoryGraphics(private var start: Pos, private var end: Pos) {
+    private var scrollPos: Int = 0
+    private val cellHeight = 25
+    private val numberCellWidth = 30
+    private val cellWidth = (end.x - start.x + 1 - numberCellWidth) / 2
 
+    private val cellColor = Color(64, 64, 64)
+    private val backgroundColor = Color(55, 53, 49)
+    private val darkBackground = Color(38, 36, 33)
+    private val selectedColor = Color(42, 64, 83)
+    private val hoverColor = Color(54, 146, 231)
 
-    val cellColor = Color(64, 64, 64)
-    val backgroundColor = Color(55, 53, 49)
-    val darkBackground = Color(38, 36, 33)
-    val selectedColor = Color(42, 64, 83)
-    val hoverColor = Color(54, 146, 231)
+    private var mouse: Pos = Pos(0,0)
 
     fun draw(graphics: Graphics2D) {
         //get mouse position:
@@ -94,7 +94,6 @@ class HistoryGraphics(var start: Pos, var end: Pos) {
         Board.board.history.goToIndex(index)
     }
 
-    var mouse: Pos = Pos(0,0)
     fun mouseMoved(pos: Pos) {
         mouse = pos
     }

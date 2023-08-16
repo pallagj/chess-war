@@ -26,10 +26,10 @@ class Pawn(
         if(piece.type != PieceType.PAWN)
             return super.knockOutPositions(piece)
 
-        val (piece, from, to) = board.history.getLastHistory(this.color)
+        val (moving, from, to) = board.history.getLastHistory(this.color)
             ?: return listOf(position)
 
-        if (piece == this && abs(from.y - to.y) == 2) {
+        if (moving == this && abs(from.y - to.y) == 2) {
             return listOf(from + Pos(0, pawnYStep(color)), to)
         }
 
@@ -111,7 +111,7 @@ class King(
         steps = arrayOf(
             Pos(0, 1), Pos(0, -1), Pos(1, 0), Pos(-1, 0), Pos(-1, 1), Pos(1, 1), Pos(-1, -1), Pos(1, -1)
         )
-    ), board = board, knockable = false
+    ), board = board, canKnockOut = false
 ) {
     override fun getPossibleMoves(): Set<Pos> {
         val specialMoves = mutableListOf<Pos>()
@@ -143,7 +143,7 @@ class King(
         val from = Pos(command.substring(0, 2))
         val to = Pos(command.substring(2, 4))
 
-        if(from != position) return;
+        if(from != position) return
 
         super.step(command)
 
